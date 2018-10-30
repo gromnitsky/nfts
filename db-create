@@ -11,7 +11,7 @@ src.markdown := $(filter %.markdown, $(src.all))
 sql := $(patsubst $(src)/%.html, $(cache)/%.sql, $(src.html)) \
 	$(patsubst $(src)/%.markdown, $(cache)/%.sql, $(src.markdown))
 
-$(if $(firstword $(sql)),,$(error a valid src= is required))
+$(if $(firstword $(sql)),,$(error valid src= is required))
 
 $(out)/db.sqlite3: $(sql)
 	-rm $@
@@ -20,12 +20,14 @@ $(out)/db.sqlite3: $(sql)
 	cat $^ | sqlite3 $@
 
 $(cache)/%.sql: $(src)/%.markdown
-	$(mkdir)
 	$(sql-insert)
 
 $(cache)/%.sql: $(src)/%.html
-	$(mkdir)
 	$(sql-insert)
 
-sql-insert = ./sql-insert $< > $@
-mkdir = @mkdir -p $(dir $@)
+define sql-insert =
+@mkdir -p $(dir $@)
+./sql-insert $< > $@
+endef
+
+.DELETE_ON_ERROR:

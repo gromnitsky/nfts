@@ -7,7 +7,8 @@ markdown_to_html='pandoc -f markdown-smart -t html5'
 html_to_text='w3m -T text/html -dump -I UTF-8 -O UTF-8 -no-graph'
 
 __dir=$(dirname "$(readlink -f "$0")")
-eval "`"$__dir/frontmatter" "$1"`"
+eval "`"$__dir/frontmatter" "$1"`" '
+[ $? -eq 0 ] || exit 1'
 
 body=`echo "$title" "$body" | $markdown_to_html | $html_to_text`
 file=`basename "$1"`
