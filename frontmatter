@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
+let read = require('util').promisify(require('fs').readFile)
 let front_matter = require('front-matter')
 
-read(process.stdin).then(parse).then(generate_shell_code).then(print)
-
-async function read(stream) {
-    let data = []; for await (const chunk of stream) data.push(chunk)
-    return data.join("\n")
-}
+read(process.argv[2], {encoding: 'utf8'})
+    .then(parse).then(generate_shell_code).then(print)
 
 function parse(text) { return front_matter(text) }
 
