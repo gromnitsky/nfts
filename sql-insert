@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# sql quote
+q() { echo "'`echo "$1" | sed "s/'/''/g"`'"; }
+
+markdown_to_html='pandoc -f markdown-smart -t html5'
+html_to_text='w3m -T text/html -dump -I UTF-8 -O UTF-8 -no-graph'
+
+__dir=$(dirname "$(readlink -f "$0")")
+eval "$("${__dir}/frontmatter" < "$1")"
+
+body=`echo "$title" "$body" | $markdown_to_html | $html_to_text`
+file=`basename "$1"`
+
+echo "INSERT INTO fts(file,title,date,body) VALUES (`q "$file"`), `q "$title"`, `q "$date"`, `q "$body"`);"
+echo "INSERT INTO metatags(file,type,name) VALUES (`q "$file"`), 'author', `q "$author"`);"

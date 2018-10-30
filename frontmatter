@@ -22,6 +22,6 @@ function generate_shell_code(fm) {
 }
 
 function print(code) {
-    let quote = s => "'" + s.trim().replace("'", "'\\''") + "'"
+    let quote = s => "'" + s.trim().replace(/'/g, "'\\''") + "'"
     code.map( assign => console.log(`${assign.var}=${quote(assign.val)}`))
 }
