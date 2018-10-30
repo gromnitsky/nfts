@@ -1,0 +1,8 @@
+---
+subject:    
+author:
+- ' bob   '
+- alice
+categories: ['  ', 'foo  ', null, ['bar', ['baz']]]
+---
+		
