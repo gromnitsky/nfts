@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+let front_matter = require('front-matter')
+
+read(process.stdin).then(parse).then(generate_shell_code).then(print)
+
+async function read(stream) {
+    let data = []; for await (const chunk of stream) data.push(chunk)
+    return data.join("\n")
+}
+
+function parse(text) { return front_matter(text) }
+
+function generate_shell_code(fm) {
+    return ['title', 'date', 'author'].map( key => {
+	let val = fm.attributes[key]
+	return {
+	    var: key,
+	    val: (val instanceof Date ? val.valueOf() : val).toString()
+	}
+    }).concat({ var: 'body', val: fm.body })
+}
+
+function print(code) {
+    let quote = s => "'" + s.trim().replace("'", "'\\''") + "'"
+    code.map( assign => console.log(`${assign.var}=${quote(assign.val)}`))
+}
