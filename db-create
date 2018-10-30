@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+
+out := _out
+cache := $(out)/.cache
+src :=
+
+src.all := $(wildcard $(src)/*.html $(src)/*.markdown)
+src.html := $(filter %.html, $(src.all))
+src.markdown := $(filter %.markdown, $(src.all))
+
+sql := $(patsubst $(src)/%.html, $(cache)/%.sql, $(src.html)) \
+	$(patsubst $(src)/%.markdown, $(cache)/%.sql, $(src.markdown))
+
+$(if $(firstword $(sql)),,$(error a valid src= is required))
+
+$(out)/db.sqlite3: $(sql)
+	-rm $@
+	sqlite3 $@ 'CREATE VIRTUAL TABLE fts USING fts5(file UNINDEXED, title UNINDEXED, date UNINDEXED, body)'
+	sqlite3 $@ 'CREATE TABLE metatags(file, type, name)'
+	cat $^ | sqlite3 $@
+
+$(cache)/%.sql: $(src)/%.markdown
+	$(mkdir)
+	$(sql-insert)
+
+$(cache)/%.sql: $(src)/%.html
+	$(mkdir)
+	$(sql-insert)
+
+sql-insert = ./sql-insert $< > $@
+mkdir = @mkdir -p $(dir $@)
