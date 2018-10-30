@@ -1,27 +1,56 @@
 #!/usr/bin/env node
 
 let read = require('util').promisify(require('fs').readFile)
+let path = require('path')
 let front_matter = require('front-matter')
 
 read(process.argv[2], {encoding: 'utf8'})
-    .then(parse).then(generate_shell_code).then(print).catch( e => {
+    .then(parse(process.argv[2]))
+    .then(generate_shell_code).then(print).catch( e => {
 	console.error(e)
 	process.exit(1)
     })
 
-function parse(text) { return front_matter(text) }
+function parse(file) {
+    return text => {
+	let fm = front_matter(text)
+	fm.file = file
+	return fm
+    }
+}
 
 function generate_shell_code(fm) {
-    return ['title', 'date', 'author'].map( key => {
-	let val = fm.attributes[key]
-	return {
-	    var: key,
-	    val: (val instanceof Date ? val.valueOf() : val || '').toString()
-	}
-    }).concat({ var: 'body', val: fm.body })
+    let a = fm.attributes
+    return [
+	{ var: 'body', val: fm.body },
+	{ var: 'title', val: oneof([a.title, a.subject], 'Untitled') },
+	{ var: 'date', val: (a.date instanceof Date ? a.date : date_from_file(fm.file)).valueOf().toString() },
+	{ var: 'author', val: oneof([a.author], 'Anonymous') },
+	{ var: 'categories',
+	      val: oneof([a.category, a.categories], 'uncategorised') }
+    ]
 }
 
 function print(code) {
-    let quote = s => "'" + s.trim().replace(/'/g, "'\\''") + "'"
+    let quote = s => "'" + s.replace(/'/g, "'\\''") + "'"
     code.map( assign => console.log(`${assign.var}=${quote(assign.val)}`))
+}
+
+function is_num(n) { return !isNaN(parseFloat(n)) && isFinite(n) }
+function is_str(s) { return Object.prototype.toString.call(s) === "[object String]" }
+
+function oneof(vals, def) {
+    let maybestr = v => (is_num(v) || is_str(v)) ? v.toString().trim() : v
+    let r = vals.map( v => {
+	let t = maybestr(v)
+	if (is_str(t)) return t
+	if (Array.isArray(v)) return oneof(v)
+	return null
+    }).filter( v => v != null && v !== '')
+    return (r.length ? r : [def]).join(',')
+}
+
+function date_from_file(name) {
+    let d = new Date(path.basename(name).slice(0,10)) // XXXX-XX-XX
+    return isNaN(d) ? new Date(0) : d
 }

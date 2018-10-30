@@ -15,3 +15,7 @@ file=`basename "$1"`
 
 echo "INSERT INTO fts(file,title,date,body) VALUES (`q "$file"`, `q "$title"`, `q "$date"`, `q "$body"`);"
 echo "INSERT INTO metatags(file,type,name) VALUES (`q "$file"`, 'author', `q "$author"`);"
+IFS=,
+for cat in $categories; do
+    echo "INSERT INTO metatags(file,type,name) VALUES (`q "$file"`, 'category', `q "$cat"`);"
+done
