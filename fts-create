@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+
+let fs = require('fs')
+let path = require('path')
+let read = require('util').promisify(fs.readFile)
+let front_matter = require('front-matter')
+let Database = require('better-sqlite3')
+let ProgressBar = require('progress')
+let argv = require('minimist')(process.argv.slice(2))
+let html = require('./lib/html')
+
+if (!(argv.o && argv._.length)) usage()
+db_open(argv.o).then( db => {
+    let bar = new ProgressBar('[:bar] :current/:total :rate/fps :percent :elapseds :etas ', { total: argv._.length, incomplete: ' ', renderThrottle: 100 })
+    argv._.forEach( file => {
+	add(db, file, argv.p).then(bar.tick.bind(bar)).catch( e => {
+	    console.error(`${file}: ${e.message}`)
+	    bar.tick()
+	})
+    })
+}).catch(e => {
+    console.error(e)
+    process.exitCode = 1
+})
+
+async function db_open(file) {
+    let unlink = require('util').promisify(fs.unlink)
+    try { await unlink(file) } catch(_) { /*ignore */ }
+
+    let db = new Database(file)
+    db.prepare(`CREATE VIRTUAL TABLE fts USING fts5(file UNINDEXED, subject UNINDEXED, date UNINDEXED, body)`).run()
+    db.prepare(`CREATE TABLE metatags(file, type, name)`).run()
+    return db
+}
+
+function add(db, file, row_file_prefix_cutoff) {
+    return read(file, {encoding: 'utf8'})
+	.then(parse(file, row_file_prefix_cutoff))
+	.then(db_append(db))
+}
+
+function parse(file, prefix) {
+    return text => {
+	let fm = front_matter(text)
+	fm.file = prefix ? file.slice(prefix.length) : file
+	return fm_normalise(fm)
+    }
+}
+
+function fm_normalise(fm) {
+    let a = {}
+    for (let k of Object.keys(fm.attributes))
+	a[k.toLowerCase()] = norm(fm.attributes[k])
+    let r = {
+	file: fm.file,
+	subject: a.title || a.subject || 'Untitled',
+	date: a.date || epoch(fm.file),
+	authors: array(a.author || a.authors, 'Anonymous'),
+	tags: array(a.category || a.categories || a.tags, 'untagged')
+	    .map( v => v.toLowerCase())
+    }
+    r.body = [r.subject,fm.body].map(html.html2text)
+	.map(html.silly_escape).join(' ')
+    return r
+}
+
+function db_append(db) {
+    return fm => {
+	db_append_post(db, fm)
+	db_append_metatags(db, fm.file, 'author', fm.authors)
+	db_append_metatags(db, fm.file, 'tag', fm.tags)
+    }
+}
+
+function db_append_post(db, fm) {
+    db.prepare(`INSERT INTO fts(file,subject,date,body) VALUES (?,?,?,?)`)
+	.run(fm.file, fm.subject, fm.date, fm.body)
+}
+
+function db_append_metatags(db, file, type, list) {
+    let ins = db.prepare(`INSERT INTO metatags(file,type,name) VALUES (?,?,?)`)
+    list.forEach( val => ins.run(file, type, val))
+}
+
+// Utils
+function norm(v) {
+    if (Array.isArray(v)) return v.map(norm).filter( v => v.length).flat()
+    if (v instanceof Date) return (v.valueOf()/1000).toString()
+    return /string|number/.test(typeof v) ? v.toString().trim() : ''
+}
+function arrarify(v) { return Array.isArray(v) ? v : norm((v ||'').split(',')) }
+function array(v, def) { let a = arrarify(v); return a.length ? a : [def] }
+function epoch(file) {
+    let d = new Date(path.basename(file).slice(0,10) /* expect XXXX-XX-XX */)
+    return (isNaN(d) ? new Date(0) : d).valueOf()/1000
+}
+function usage() {
+    console.error('fts-create -o out.sqlite3 [-p row-file-prefix-cutoff] file1.md [...]')
+    process.exit(1)
+}
