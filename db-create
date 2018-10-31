@@ -2,12 +2,15 @@
 
 out := _out
 cache := $(out)/.cache
+mk := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 src :=
 
-src.all := $(shell find $(src)/ -type f -name '*.html' -or -name '*.markdown' -or -name '*.md')
-sql := $(patsubst $(src)/%, $(cache)/%.sql, $(src.all))
+$(if $(firstword $(src)),,$(error valid src= is required))
 
-$(if $(firstword $(sql)),,$(error valid src= is required))
+src.all := $(foreach dir,$(src),$(shell find $(dir)/ -type f -name '*.html' -or -name '*.markdown' -or -name '*.md'))
+sql := $(patsubst %, $(cache)/%.sql, $(src.all))
+
+$(if $(firstword $(sql)),,$(error no files found; check src=))
 
 $(out)/db.sqlite3: $(sql)
 	-rm $@
@@ -15,8 +18,8 @@ $(out)/db.sqlite3: $(sql)
 	sqlite3 $@ 'CREATE TABLE metatags(file, type, name)'
 	cat $^ | sqlite3 $@
 
-$(cache)/%.sql: $(src)/%
+$(cache)/%.sql: %
 	@mkdir -p $(dir $@)
-	./sql-insert $< > $@
+	$(mk)/sql-insert $< > $@
 
 .DELETE_ON_ERROR:
