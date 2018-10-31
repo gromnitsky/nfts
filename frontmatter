@@ -20,37 +20,32 @@ function parse(file) {
 }
 
 function generate_shell_code(fm) {
-    let a = fm.attributes
+    let a = {}
+    for (let k of Object.keys(fm.attributes)) a[k] = norm(fm.attributes[k])
     return [
 	{ var: 'body', val: fm.body },
-	{ var: 'title', val: oneof([a.title, a.subject], 'Untitled') },
-	{ var: 'date', val: (a.date instanceof Date ? a.date : date_from_file(fm.file)).valueOf().toString() },
-	{ var: 'author', val: oneof([a.author], 'Anonymous') },
+	{ var: 'title', val: a.title || a.subject || 'Untitled' },
+	{ var: 'date', val: a.date || date_from_file(fm.file) },
+	{ var: 'author', val: array(a.author || a.authors, 'Anonymous') },
 	{ var: 'categories',
-	      val: oneof([a.category, a.categories], 'uncategorised') }
+	      val: array(a.category || a.categories || a.tags, 'untagged')
+	      .map( v => v.toLowerCase()) }
     ]
 }
 
 function print(code) {
-    let quote = s => "'" + s.replace(/'/g, "'\\''") + "'"
-    code.map( assign => console.log(`${assign.var}=${quote(assign.val)}`))
+    let quote = s => "'" + s.toString().replace(/'/g, "'\\''") + "'"
+    code.map( v => console.log(`${v.var}=${quote(v.val)}`))
 }
 
-function is_num(n) { return !isNaN(parseFloat(n)) && isFinite(n) }
-function is_str(s) { return Object.prototype.toString.call(s) === "[object String]" }
-
-function oneof(vals, def) {
-    let maybestr = v => (is_num(v) || is_str(v)) ? v.toString().trim() : v
-    let r = vals.map( v => {
-	let t = maybestr(v)
-	if (is_str(t)) return t
-	if (Array.isArray(v)) return oneof(v)
-	return null
-    }).filter( v => v != null && v !== '')
-    return (r.length ? r : [def]).join(',')
+function norm(v) {
+    if (Array.isArray(v)) return v.map(norm).filter( v => v.length).flat()
+    if (v instanceof Date) return v.valueOf().toString()
+    return /string|number/.test(typeof v) ? v.toString().trim() : ''
 }
-
+function arrarify(v) { return Array.isArray(v) ? v : norm((v ||'').split(',')) }
+function array(v, def) { let a = arrarify(v); return a.length ? a : [def] }
 function date_from_file(name) {
-    let d = new Date(path.basename(name).slice(0,10)) // XXXX-XX-XX
-    return isNaN(d) ? new Date(0) : d
+    let d = new Date(path.basename(name).slice(0,10) /* expect XXXX-XX-XX */)
+    return (isNaN(d) ? new Date(0) : d).valueOf()
 }

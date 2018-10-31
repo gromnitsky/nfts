@@ -3,6 +3,6 @@ subject:
 author:
 - ' bob   '
 - alice
-categories: ['  ', 'foo  ', null, ['bar', ['baz']]]
+categories: ['  ', 'FOO1  ', null, undefined, ['bar', ['baz', 0]]]
 ---
 		
