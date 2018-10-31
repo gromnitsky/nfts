@@ -4,12 +4,8 @@ out := _out
 cache := $(out)/.cache
 src :=
 
-src.all := $(wildcard $(src)/*.html $(src)/*.markdown)
-src.html := $(filter %.html, $(src.all))
-src.markdown := $(filter %.markdown, $(src.all))
-
-sql := $(patsubst $(src)/%.html, $(cache)/%.sql, $(src.html)) \
-	$(patsubst $(src)/%.markdown, $(cache)/%.sql, $(src.markdown))
+src.all := $(shell find $(src)/ -type f -name '*.html' -or -name '*.markdown' -or -name '*.md')
+sql := $(patsubst $(src)/%, $(cache)/%.sql, $(src.all))
 
 $(if $(firstword $(sql)),,$(error valid src= is required))
 
@@ -19,15 +15,8 @@ $(out)/db.sqlite3: $(sql)
 	sqlite3 $@ 'CREATE TABLE metatags(file, type, name)'
 	cat $^ | sqlite3 $@
 
-$(cache)/%.sql: $(src)/%.markdown
-	$(sql-insert)
-
-$(cache)/%.sql: $(src)/%.html
-	$(sql-insert)
-
-define sql-insert =
-@mkdir -p $(dir $@)
-./sql-insert $< > $@
-endef
+$(cache)/%.sql: $(src)/%
+	@mkdir -p $(dir $@)
+	./sql-insert $< > $@
 
 .DELETE_ON_ERROR:
