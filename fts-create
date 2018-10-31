@@ -5,6 +5,7 @@ let read = require('util').promisify(fs.readFile)
 let front_matter = require('front-matter')
 let Database = require('better-sqlite3')
 let ProgressBar = require('progress')
+let marked = require('marked')
 let argv = require('minimist')(process.argv.slice(2))
 let html = require('./lib/html')
 
@@ -57,7 +58,7 @@ function fm_normalise(fm) {
 	tags: array(a.category || a.categories || a.tags, 'untagged')
 	    .map( v => v.toLowerCase())
     }
-    r.body = [r.subject,fm.body].map(html.html2text)
+    r.body = [r.subject, marked(fm.body)].map(html.html2text)
 	.map(html.silly_escape).join(' ')
     return r
 }
