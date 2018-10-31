@@ -11,7 +11,7 @@ let html = require('./lib/html')
 
 if (!(argv.o && argv._.length)) usage()
 db_open(argv.o).then( db => {
-    let bar = new ProgressBar('[:bar] :current/:total :rate/fps :percent :elapseds :etas ', { total: argv._.length, incomplete: ' ', renderThrottle: 100 })
+    let bar = progress_bar(argv._.length, argv.q)
     argv._.forEach( file => {
 	add(db, file, argv.p).then(bar.tick.bind(bar)).catch( e => {
 	    console.error(`${file}: ${e.message}`)
@@ -95,6 +95,10 @@ function epoch(file) {
     return (isNaN(d) ? new Date(0) : d).valueOf()/1000
 }
 function usage() {
-    console.error('fts-create -o out.sqlite3 [-p row-file-prefix-cutoff] file1.md [...]')
+    console.error('fts-create -o out.sqlite3 [-q] [-p row-file-prefix-cutoff] file1.md [...]')
     process.exit(1)
+}
+function progress_bar(total, quiet) {
+    if (quiet) return {tick: () => {}}
+    return new ProgressBar('[:bar] :current/:total :rate/fps :percent :elapseds :etas ', { total: total, incomplete: ' ', renderThrottle: 100 })
 }
