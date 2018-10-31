@@ -21,11 +21,12 @@ function parse(file) {
 
 function generate_shell_code(fm) {
     let a = {}
-    for (let k of Object.keys(fm.attributes)) a[k] = norm(fm.attributes[k])
+    for (let k of Object.keys(fm.attributes))
+	a[k.toLowerCase()] = norm(fm.attributes[k])
     return [
 	{ var: 'body', val: fm.body },
 	{ var: 'title', val: a.title || a.subject || 'Untitled' },
-	{ var: 'date', val: a.date || date_from_file(fm.file) },
+	{ var: 'date', val: a.date || epoch(fm.file) },
 	{ var: 'authors', val: array(a.author || a.authors, 'Anonymous') },
 	{ var: 'tags',
 	      val: array(a.category || a.categories || a.tags, 'untagged')
@@ -40,12 +41,12 @@ function print(code) {
 
 function norm(v) {
     if (Array.isArray(v)) return v.map(norm).filter( v => v.length).flat()
-    if (v instanceof Date) return v.valueOf().toString()
+    if (v instanceof Date) return (v.valueOf()/1000).toString()
     return /string|number/.test(typeof v) ? v.toString().trim() : ''
 }
 function arrarify(v) { return Array.isArray(v) ? v : norm((v ||'').split(',')) }
 function array(v, def) { let a = arrarify(v); return a.length ? a : [def] }
-function date_from_file(name) {
-    let d = new Date(path.basename(name).slice(0,10) /* expect XXXX-XX-XX */)
-    return (isNaN(d) ? new Date(0) : d).valueOf()
+function epoch(file) {
+    let d = new Date(path.basename(file).slice(0,10) /* expect XXXX-XX-XX */)
+    return (isNaN(d) ? new Date(0) : d).valueOf()/1000
 }
