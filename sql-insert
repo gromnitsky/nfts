@@ -3,7 +3,15 @@
 # sql quote
 q() { echo "'`echo "$1" | sed "s/'/''/g"`'"; }
 
-markdown_to_html='pandoc -f markdown-smart -t html5'
+# metatags csv type
+metatags() {
+    local IFS=,
+    for val in $1; do
+	echo "INSERT INTO metatags(file,type,name) VALUES (`q "$file"`, '$2', `q "$val"`);"
+    done
+}
+
+markdown_to_html='pandoc -f markdown-smart-tex_math_dollars -t html5'
 html_to_text='w3m -T text/html -dump -I UTF-8 -O UTF-8 -no-graph'
 
 __dir=$(dirname "$(readlink -f "$0")")
@@ -14,8 +22,5 @@ body=`echo "$title" "$body" | $markdown_to_html | $html_to_text`
 file=`basename "$1"`
 
 echo "INSERT INTO fts(file,title,date,body) VALUES (`q "$file"`, `q "$title"`, `q "$date"`, `q "$body"`);"
-echo "INSERT INTO metatags(file,type,name) VALUES (`q "$file"`, 'author', `q "$author"`);"
-IFS=,
-for cat in $categories; do
-    echo "INSERT INTO metatags(file,type,name) VALUES (`q "$file"`, 'category', `q "$cat"`);"
-done
+metatags "$authors" author
+metatags "$tags" tag

@@ -26,8 +26,8 @@ function generate_shell_code(fm) {
 	{ var: 'body', val: fm.body },
 	{ var: 'title', val: a.title || a.subject || 'Untitled' },
 	{ var: 'date', val: a.date || date_from_file(fm.file) },
-	{ var: 'author', val: array(a.author || a.authors, 'Anonymous') },
-	{ var: 'categories',
+	{ var: 'authors', val: array(a.author || a.authors, 'Anonymous') },
+	{ var: 'tags',
 	      val: array(a.category || a.categories || a.tags, 'untagged')
 	      .map( v => v.toLowerCase()) }
     ]
