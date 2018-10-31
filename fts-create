@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 let fs = require('fs')
-let path = require('path')
 let read = require('util').promisify(fs.readFile)
 let front_matter = require('front-matter')
 let Database = require('better-sqlite3')
@@ -9,23 +8,21 @@ let ProgressBar = require('progress')
 let argv = require('minimist')(process.argv.slice(2))
 let html = require('./lib/html')
 
-if (!(argv.o && argv._.length)) usage()
-db_open(argv.o).then( db => {
+if (__filename === process.argv[1]) {
+    if (!(argv.o && argv._.length)) usage()
+
+    let db = db_open(argv.o)
     let bar = progress_bar(argv._.length, argv.q)
     argv._.forEach( file => {
-	add(db, file, argv.p).then(bar.tick.bind(bar)).catch( e => {
+	add(db, file, argv.p).catch( e => {
 	    console.error(`${file}: ${e.message}`)
-	    bar.tick()
-	})
+	    process.exitCode = 2
+	}).finally(bar.tick.bind(bar))
     })
-}).catch(e => {
-    console.error(e)
-    process.exitCode = 1
-})
+}
 
-async function db_open(file) {
-    let unlink = require('util').promisify(fs.unlink)
-    try { await unlink(file) } catch(_) { /*ignore */ }
+function db_open(file) {
+    try { fs.unlinkSync(file) } catch(_) { /* ignore */ }
 
     let db = new Database(file)
     db.prepare(`CREATE VIRTUAL TABLE fts USING fts5(file UNINDEXED, subject UNINDEXED, date UNINDEXED, body)`).run()
@@ -46,6 +43,7 @@ function parse(file, prefix) {
 	return fm_normalise(fm)
     }
 }
+exports.parse = parse
 
 function fm_normalise(fm) {
     let a = {}
@@ -91,7 +89,7 @@ function norm(v) {
 function arrarify(v) { return Array.isArray(v) ? v : norm((v ||'').split(',')) }
 function array(v, def) { let a = arrarify(v); return a.length ? a : [def] }
 function epoch(file) {
-    let d = new Date(path.basename(file).slice(0,10) /* expect XXXX-XX-XX */)
+    let d = new Date(file.slice(0,10).replace(/\//g, '-'))
     return (isNaN(d) ? new Date(0) : d).valueOf()/1000
 }
 function usage() {
