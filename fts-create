@@ -90,7 +90,8 @@ function norm(v) {
 function arrarify(v) { return Array.isArray(v) ? v : norm((v ||'').split(',')) }
 function array(v, def) { let a = arrarify(v); return a.length ? a : [def] }
 function epoch(file) {
-    let d = new Date(file.slice(0,10).replace(/\//g, '-'))
+    let yyyy_mm_dd = file.slice(0,10).replace(/\//g, '-')
+    let d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(yyyy_mm_dd) ? yyyy_mm_dd : '')
     return (isNaN(d) ? new Date(0) : d).valueOf()/1000
 }
 function usage() {

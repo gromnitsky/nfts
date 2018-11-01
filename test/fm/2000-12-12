@@ -1,8 +1,0 @@
----
-subject:    
-author:
-- ' bob   '
-- alice
-categories: ['  ', 'FOO1  ', null, undefined, ['bar', ['baz', 0]]]
----
-		
