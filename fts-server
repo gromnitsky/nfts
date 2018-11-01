@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+'use strict';
+let http = require('http')
+let Database = require('better-sqlite3')
+let Finder = require('./lib/finder')
+
+if (process.argv.length < 3) {
+    console.error('Usage: fts-server db.sqlite3'); process.exit(1)
+}
+
+let finder = new Finder(new Database(process.argv[2]))
+let server = http.createServer(function (req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    if (req.method !== "GET") { errx(res, 501, "not implemented"); return }
+
+    let sp = new URL(req.url, 'http://example.com').searchParams
+    if (!sp.get('q')) { errx(res, 412, "no ?q=phrase"); return }
+
+    let result
+    try {
+	result = finder.find(sp.get('q'))
+    } catch(e) {
+	errx(res, 500, e.message); return
+    }
+
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify(result))
+})
+
+server.listen(process.env.PORT || 3000, function() {
+    let a = this.address()
+    let host = a.family === 'IPv6' ? `[${a.address}]` : a.address
+    console.error(`Listening (${a.family}): http://${host}:${a.port}`)
+})
+
+function errx(res, code, msg) {
+    try {
+	res.statusCode = code
+	res.statusMessage = msg
+    } catch (e) {
+	console.error(`errx: ${e.message}`)
+    }
+    res.end()
+    console.error(`ERROR: ${msg}`)
+}
