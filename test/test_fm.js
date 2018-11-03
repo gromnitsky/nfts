@@ -2,7 +2,7 @@
 'use strict';
 
 let assert = require('assert')
-let fts = require('../fts-create')
+let fts = require('../nfts-create')
 
 suite('frontmatter parsing', function() {
     test('blank', function() {

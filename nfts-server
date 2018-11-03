@@ -6,7 +6,7 @@ let Database = require('better-sqlite3')
 let Finder = require('./lib/finder')
 
 if (process.argv.length < 3) {
-    console.error('Usage: fts-server db.sqlite3'); process.exit(1)
+    console.error('Usage: nfts-server db.sqlite3'); process.exit(1)
 }
 
 let finder = new Finder(new Database(process.argv[2]))
@@ -29,15 +29,12 @@ let server = http.createServer(function (req, res) {
 })
 
 server.listen(process.env.PORT || 3000, function() {
-    let a = this.address()
-    let host = a.family === 'IPv6' ? `[${a.address}]` : a.address
-    console.error(`Listening (${a.family}): http://${host}:${a.port}`)
+    console.error(`Listening: http://[${this.address().address}]:${this.address().port}`)
 })
 
 function errx(res, code, msg) {
     try {
-	res.statusCode = code
-	res.statusMessage = msg
+	[res.statusCode, res.statusMessage] = [code, msg]
     } catch (e) {
 	console.error(`errx: ${e.message}`)
     }

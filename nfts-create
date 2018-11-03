@@ -95,7 +95,7 @@ function epoch(file) {
     return (isNaN(d) ? new Date(0) : d).valueOf()/1000
 }
 function usage() {
-    console.error('fts-create -o out.sqlite3 [-q] [-p row-file-prefix-cutoff] file1.md [...]')
+    console.error('Usage: nfts-create -o out.sqlite3 [-q] [-p row-file-prefix-cutoff] file1.md [...]')
     process.exit(1)
 }
 function progress_bar(total, quiet) {

@@ -1,7 +1,6 @@
-.PHONY: server
-server: kill
-	./fts-server $(db) &
+srv := ./nfts-server $(db)
 
-.PHONY: kill
-kill:
-	-pkill -f 'node ./fts-server $(db)'
+server: kill; $(srv) &
+kill:; -pkill -f 'node $(srv)'
+
+.PHONY: server kill
