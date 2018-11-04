@@ -14,7 +14,8 @@ let server = http.createServer(function (req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*')
     if (req.method !== "GET") { errx(res, 501, "not implemented"); return }
 
-    let sp = new URL(req.url, 'http://example.com').searchParams
+    let idx = req.url.indexOf('?')
+    let sp = new URLSearchParams(req.url.slice(idx < 0 ? 0 : idx))
     if (!sp.get('q')) { errx(res, 412, "no ?q=phrase"); return }
 
     let result
