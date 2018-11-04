@@ -7,6 +7,11 @@
         "type": "git",
         "url": "git://github.com/gromnitsky/nfts.git"
     },
+    "bin": {
+        "nfts-create": "./nfts-create",
+        "nfts-query": "./nfts-query",
+        "nfts-server": "./nfts-server"
+    },
     "dependencies": {
         "better-sqlite3": "^5.0.1",
         "ent": "^2.2.0",
