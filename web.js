@@ -1,6 +1,12 @@
-let NftsDialog = (function () {
+(function(root, factory) { /* global define */
+    if (typeof define === 'function' && define.amd) {
+	define([], factory)
+    } else if (typeof module === 'object' && module.exports) {
+	module.exports = factory()
+    } else
+	root.NftsDialog = factory()
+}(typeof self !== 'undefined' ? self : this, function() {
     'use strict';
-
     class Dialog {
 	constructor(conf, post_href, author_href, tag_href) {
 	    document.addEventListener('DOMContentLoaded', () => {
@@ -12,7 +18,7 @@ let NftsDialog = (function () {
 		btn.onclick = evt => { this.toggle(); evt.preventDefault() }
 	    })
 
-            this.conf = conf
+	    this.conf = conf
 	    this.id = 'nfts__dialog'
 	    Object.assign(this, {post_href, author_href, tag_href})
 	}
@@ -21,24 +27,24 @@ let NftsDialog = (function () {
 	focus() { if (!this.is_hidden()) this.input.focus() }
 
 	toggle() {
-            if (!this.node)
+	    if (!this.node)
 		this.init()
-            else
+	    else
 		this.node.classList.toggle('nfts__dialog--hidden')
-            this.focus()
+	    this.focus()
 	}
 
 	init() {
-            console.log('creating', this.id)
-            this.node = document.createElement('div')
-            this.node.id = this.id
+	    console.log('creating', this.id)
+	    this.node = document.createElement('div')
+	    this.node.id = this.id
 
-            this.parent.prepend(this.node)
-            this.node.innerHTML= '<input type="search" placeholder="Search..."><div></div>'
-            this.input = this.node.querySelector('input')
-            this.result = this.node.querySelector('div')
+	    this.parent.prepend(this.node)
+	    this.node.innerHTML= '<input type="search" placeholder="Search..."><div></div>'
+	    this.input = this.node.querySelector('input')
+	    this.result = this.node.querySelector('div')
 
-            this.input.oninput = debounce(this.search, this.conf.debounce || 500).bind(this)
+	    this.input.oninput = debounce(this.search, this.conf.debounce || 500).bind(this)
 
 	    let style = document.createElement('style')
 	    style.innerHTML = `
@@ -49,33 +55,33 @@ let NftsDialog = (function () {
 	}
 
 	search() {
-            if (/^\s*$/.test(this.input.value)) return
+	    if (/^\s*$/.test(this.input.value)) return
 
-            this.result.innerText = 'Fetching results...'
-            this.send(this.input.value)
+	    this.result.innerText = 'Fetching results...'
+	    this.send(this.input.value)
 		.then(this.print_results.bind(this))
 		.catch(this.search_error.bind(this))
 	}
 
 	send(query) {
-            let url = `${this.conf.server}/?q=${encodeURIComponent(query)}`
-            return fetch_json(url)
+	    let url = `${this.conf.server}/?q=${encodeURIComponent(query)}`
+	    return fetch_json(url)
 	}
 
 	search_error(e) {
-            this.result.innerText = e.res && e.res.status === 412 ? 'Invalid query' : e.message
+	    this.result.innerText = e.res && e.res.status === 412 ? 'Invalid query' : e.message
 	}
 
 	print_results(r) {
-            if (!r.length) { this.result.innerText = 'No matches'; return }
-            let tbl = ['<table style="table-layout: fixed; width: 100%">',
-                       '<thead><tr>',
-                       '<th style="width: 7em">Air Date</th>',
-                       '<th>Snippet</th>',
-                       '</tr></thead><tbody>']
-            tbl = tbl.concat(r.map( e => this.entry_fmt(e)))
-            tbl.push('</tbody></table>')
-            this.result.innerHTML = tbl.join("\n") + `<p>Total: ${r.length}</p>`
+	    if (!r.length) { this.result.innerText = 'No matches'; return }
+	    let tbl = ['<table style="table-layout: fixed; width: 100%">',
+		       '<thead><tr>',
+		       '<th style="width: 7em">Air Date</th>',
+		       '<th>Snippet</th>',
+		       '</tr></thead><tbody>']
+	    tbl = tbl.concat(r.map( e => this.entry_fmt(e)))
+	    tbl.push('</tbody></table>')
+	    this.result.innerHTML = tbl.join("\n") + `<p>Total: ${r.length}</p>`
 	}
 
 	entry_fmt(e) {
@@ -83,14 +89,14 @@ let NftsDialog = (function () {
 	    let post_href = this.post_href || (v => v)
 	    let author_href = this.author_href || (v => v)
 	    let tag_href = this.tag_href || (v => v)
-            return [
+	    return [
 		'<tr><td style="vertical-align: top">',
 		Dialog.date_fmt(e.date * 1000),
 		'</td><td>', [
 		    link(post_href(e.file), e.subject),
-                    e.snippet, // unescaped but must be already safe from the db
-                    'A: ' + e.authors.map( v => link(author_href(v), v)).join(', '),
-                    'T: ' + e.tags.map( v => link(tag_href(v), v)).join(', '),
+		    e.snippet, // unescaped but must be already safe from the db
+		    'A: ' + e.authors.map( v => link(author_href(v), v)).join(', '),
+		    'T: ' + e.tags.map( v => link(tag_href(v), v)).join(', '),
 		].join('<br>'),
 		'</td></tr>'].join('')
 	}
@@ -103,9 +109,9 @@ let NftsDialog = (function () {
 
     function fetch_json(url, opt) {
 	let err = r => {
-            if (r.ok) return r
-            let e = new Error(r.statusText); e.res = r
-            throw e
+	    if (r.ok) return r
+	    let e = new Error(r.statusText); e.res = r
+	    throw e
 	}
 	return fetch(url, opt).then(err).then( r => r.json())
     }
@@ -113,13 +119,13 @@ let NftsDialog = (function () {
     function esc(s) {
 	if (s == null) return ''
 	return s.toString().replace(/[<>&'"]/g, ch => {
-            switch (ch) {
-            case '<': return '&lt;'
-            case '>': return '&gt;'
-            case '&': return '&amp;'
-            case '\'': return '&apos;'
-            case '"': return '&quot;'
-            }
+	    switch (ch) {
+	    case '<': return '&lt;'
+	    case '>': return '&gt;'
+	    case '&': return '&amp;'
+	    case '\'': return '&apos;'
+	    case '"': return '&quot;'
+	    }
 	})
     }
 
@@ -158,4 +164,4 @@ let NftsDialog = (function () {
     }
 
     return Dialog
-})();
+}));
