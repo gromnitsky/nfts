@@ -9,14 +9,12 @@
     'use strict';
     class Dialog {
 	constructor(conf, post_href, author_href, tag_href) {
-	    document.addEventListener('DOMContentLoaded', () => {
-		this.parent = document.querySelector(conf.parent_container)
-		let btn = document.querySelector(conf.dialog_toggle_btn)
-		if (!(this.parent && btn)) throw new Error('init')
+	    this.parent = document.querySelector(conf.parent_container)
+	    let btn = document.querySelector(conf.dialog_toggle_btn)
+	    if (!(this.parent && btn)) throw new Error('init')
 
-		btn.style.visibility = 'visible'
-		btn.onclick = evt => { this.toggle(); evt.preventDefault() }
-	    })
+	    btn.style.visibility = 'visible'
+	    btn.onclick = evt => { this.toggle(); evt.preventDefault() }
 
 	    this.conf = conf
 	    this.id = 'nfts__dialog'

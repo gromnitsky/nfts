@@ -1,4 +1,7 @@
 {
+    "name": "nfts",
+    "version": "0.0.1",
+    "license": "MIT",
     "dependencies": {
         "better-sqlite3": "^5.0.1",
         "ent": "^2.2.0",

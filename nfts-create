@@ -9,7 +9,7 @@ let marked = require('marked')
 let argv = require('minimist')(process.argv.slice(2))
 let html = require('./lib/html')
 
-if (__filename === process.argv[1]) {
+if (require.main === module) {
     if (!(argv.o && argv._.length)) usage()
 
     let db = db_open(argv.o)
@@ -54,7 +54,7 @@ function fm_normalise(fm) {
 	file: fm.file,
 	subject: a.title || a.subject || 'Untitled',
 	date: a.date || epoch(fm.file),
-	authors: array(a.author || a.authors, 'Anonymous'),
+	authors: array(a.author || a.authors, 'anonymous'),
 	tags: array(a.category || a.categories || a.tags, 'untagged')
 	    .map( v => v.toLowerCase())
     }
