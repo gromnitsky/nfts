@@ -23,7 +23,7 @@ From a diff terminal:
 ~~~
 $ cd weblog
 $ nfts-create -o db.sqlite3 -p _posts/ _posts/*
-$ nfts-server _site/db.sqlite3
+$ nfts-server db.sqlite3
 ~~~
 
 To test the server:
