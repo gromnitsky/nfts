@@ -1,0 +1,62 @@
+#!/usr/bin/env node
+
+let fs = require('fs')
+let front_matter = require('front-matter')
+let marked = require('marked')
+let argv = require('minimist')(process.argv.slice(2))
+let html = require('./lib/html')
+
+if (require.main === module) {
+    if (!argv._.length) usage()
+    console.log(JSON.stringify({total: argv._.length}))
+    argv._.forEach( file => print(file, argv.p))
+}
+
+function print(file, row_file_prefix_cutoff) {
+    let markdown = fs.readFileSync(file, {encoding: 'utf8'})
+    let fm = parse(file, row_file_prefix_cutoff, markdown)
+    process.stdout.write(JSON.stringify(fm))
+    process.stdout.write("\n")
+}
+
+function parse(file, prefix, markdown) {
+    let fm = front_matter(markdown)
+    fm.file = prefix ? file.slice(prefix.length) : file
+    return fm_normalise(fm)
+}
+exports.parse = parse
+
+function fm_normalise(fm) {
+    let a = {}
+    for (let k of Object.keys(fm.attributes))
+	a[k.toLowerCase()] = norm(fm.attributes[k])
+    let r = {
+	file: fm.file,
+	subject: a.title || a.subject || 'Untitled',
+	date: a.date || epoch(fm.file),
+	authors: array(a.author || a.authors, 'anonymous'),
+	tags: array(a.category || a.categories || a.tags, 'untagged')
+	    .map( v => v.toLowerCase())
+    }
+    r.body = [r.subject, marked(fm.body)].map(html.html2text)
+	.map(html.silly_escape).join(' ')
+    return r
+}
+
+// Utils
+function norm(v) {
+    if (Array.isArray(v)) return v.map(norm).filter( v => v.length).flat()
+    if (v instanceof Date) return (v.valueOf()/1000).toString()
+    return /string|number/.test(typeof v) ? v.toString().trim() : ''
+}
+function arrarify(v) { return Array.isArray(v) ? v : norm((v ||'').split(',')) }
+function array(v, def) { let a = arrarify(v); return a.length ? a : [def] }
+function epoch(file) {
+    let yyyy_mm_dd = file.slice(0,10).replace(/\//g, '-')
+    let d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(yyyy_mm_dd) ? yyyy_mm_dd : '')
+    return (isNaN(d) ? new Date(0) : d).valueOf()/1000
+}
+function usage() {
+    console.error('Usage: nfts-md2json [-q] [-p row-file-prefix-cutoff] file1.md [file2.md ...]')
+    process.exit(1)
+}
