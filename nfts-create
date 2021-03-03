@@ -13,6 +13,7 @@ if (require.main === module) {
     if (!(argv.o && argv._.length)) usage()
 
     let db = db_open(argv.o)
+    db.pragma('synchronous = OFF')
     let bar = progress_bar(argv._.length, argv.q)
     argv._.forEach( file => {
 	add(db, file, argv.p).catch( e => {
