@@ -1,5 +1,5 @@
-CFLAGS := -std=c17 -Wall -Wextra -Wpedantic -g
-LDFLAGS := -lsqlite3 -ljansson
+CFLAGS := -g -std=c17 -Wall -Wextra -Wpedantic -Wformat-truncation=0
+LDFLAGS := -lsqlite3 -ljansson -lm
 
 nfts-create2:
 

@@ -11,9 +11,12 @@
 #include <sqlite3.h>
 #include <jansson.h>
 
+#include "lib/progress.c"
+
 typedef struct {
-  char *o; // db
-  bool q;  // quiet
+  char *o;   // db
+  bool q;    // quiet
+  bool sync; // sync write to a sqlite db
 
   sqlite3 *db;
 } Conf;
@@ -25,10 +28,11 @@ void usage() {
 
 void parse_opt(Conf *conf, int argc, char **argv) {
   int opt;
-  while ((opt = getopt(argc, argv, "qo:")) != -1) {
+  while ((opt = getopt(argc, argv, "Sqo:")) != -1) {
     switch (opt) {
     case 'o': conf->o = optarg; break;
     case 'q': conf->q = true; break;
+    case 'S': conf->sync = true; break;
     default: usage();
     }
   }
@@ -40,7 +44,7 @@ const char* append_to_fts(Conf *conf, json_t *root) {
   const char *subject = json_string_value(json_object_get(root, "subject"));
   const char *body = json_string_value(json_object_get(root, "body"));
   size_t date = json_integer_value(json_object_get(root, "date"));
-  if ( !(file && subject && body)) return "invalid json";
+  if ( !(file && subject && body /*&& date*/)) return "invalid json";
 
   sqlite3_stmt *stm;
   if (sqlite3_prepare_v2(conf->db,
@@ -105,39 +109,44 @@ char* mk_tables(Conf *conf) {
 }
 
 int main(int argc, char**argv) {
-  Conf conf = { .q = false };
+  Conf conf = { .sync = false };
   parse_opt(&conf, argc, argv);
 
   unlink(conf.o);
   if (sqlite3_open(conf.o, &conf.db))
     errx(1, "%s: %s", conf.o, sqlite3_errmsg(conf.db));
-  sqlite3_exec(conf.db, "PRAGMA synchronous = OFF", 0, 0, 0);
+  if (!conf.sync) sqlite3_exec(conf.db, "PRAGMA synchronous = OFF", 0, 0, 0);
 
   char *error = mk_tables(&conf);
   if (error) errx(1, "sql: %s", error);
 
   char *line = NULL;
-  size_t _ = 0, line_num = 1, total = 0;
+  size_t _ = 0, line_num = 0, total = 0;
+  Progress *prg = NULL;
   while (getdelim(&line, &_, '\n', stdin) != -1) {
+    line_num++;
     json_error_t e;
     json_t *root = json_loads(line, 0, &e); // parse json
     if (!root) { warnx("line %ld: %s", line_num, e.text); break; }
 
     if (line_num == 1) {
       total = json_integer_value(json_object_get(root, "total"));
-      // TODO: init progress bar
+      prg = progress_init(1, total);
+      strcpy(prg->suffix, " ");
     } else {
       const char *r = append_to_fts(&conf, root);
       if (r) { warnx("line %ld, %s", line_num, r); break; }
       r = append_to_metatags(&conf, root);
       if (r) { warnx("line %ld, %s", line_num, r); break; }
-      // TODO: update progress bar
+
+      if (!conf.q) progress_update(prg, line_num - 1);
     }
 
     json_decref(root);
-    line_num++;
   }
+  if (!conf.q) { progress_end(&prg); fprintf(stderr, "\n"); }
   free(line);
 
   sqlite3_close(conf.db);
+  return total == line_num-1 ? 0 : 1;
 }

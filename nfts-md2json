@@ -57,6 +57,6 @@ function epoch(file) {
     return (isNaN(d) ? new Date(0) : d).valueOf()/1000
 }
 function usage() {
-    console.error('Usage: nfts-md2json [-q] [-p row-file-prefix-cutoff] file1.md [file2.md ...]')
+    console.error('Usage: nfts-md2json [-p row-file-prefix-cutoff] file1.md [file2.md ...]')
     process.exit(1)
 }
