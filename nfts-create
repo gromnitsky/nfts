@@ -5,7 +5,7 @@ let read = require('util').promisify(fs.readFile)
 let front_matter = require('front-matter')
 let Database = require('better-sqlite3')
 let ProgressBar = require('progress')
-let marked = require('marked')
+let marked = require('marked').parse
 let argv = require('minimist')(process.argv.slice(2))
 let html = require('./lib/html')
 

@@ -1,6 +1,6 @@
 {
     "name": "nfts",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "author": "Alexander Gromnitsky",
     "license": "MIT",
     "repository": {
@@ -13,13 +13,13 @@
         "nfts-server": "./nfts-server"
     },
     "dependencies": {
-        "better-sqlite3": "^7.1.2",
+        "better-sqlite3": "^7.6.2",
         "ent": "^2.2.0",
         "front-matter": "^4.0.2",
-        "marked": "^2.0.1",
-        "minimist": "^1.2.5",
+        "marked": "^4.0.19",
+        "minimist": "^1.2.6",
         "parse5": "^6.0.1",
         "progress": "^2.0.3",
-        "shell-quote": "^1.7.2"
+        "shell-quote": "^1.7.3"
     }
 }
