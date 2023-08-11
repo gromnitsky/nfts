@@ -1,25 +1,23 @@
 {
     "name": "nfts",
-    "version": "0.0.6",
+    "version": "0.1.0",
     "author": "Alexander Gromnitsky",
     "license": "MIT",
+    "type": "module",
     "repository": {
         "type": "git",
         "url": "git://github.com/gromnitsky/nfts.git"
     },
     "bin": {
-        "nfts-create": "./nfts-create",
-        "nfts-query": "./nfts-query",
-        "nfts-server": "./nfts-server"
+        "nfts-create": "./nfts-create.js",
+        "nfts-server": "./nfts-server.js"
     },
     "dependencies": {
-        "better-sqlite3": "^8.4.0",
+        "better-sqlite3": "^8.5.0",
         "ent": "^2.2.0",
         "front-matter": "^4.0.2",
-        "marked": "~5.0.3",
-        "minimist": "^1.2.8",
+        "marked": "~7.0.2",
         "parse5": "^7.1.2",
-        "progress": "^2.0.3",
-        "shell-quote": "^1.8.1"
+        "progress": "^2.0.3"
     }
 }

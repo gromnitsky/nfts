@@ -1,51 +1,62 @@
 #!/usr/bin/env node
 
-let fs = require('fs')
-let read = require('util').promisify(fs.readFile)
-let front_matter = require('front-matter')
-let Database = require('better-sqlite3')
-let ProgressBar = require('progress')
-let marked = require('marked').parse
-let argv = require('minimist')(process.argv.slice(2))
-let html = require('./lib/html')
+import util from 'util'
+import fs from 'fs'
+import {readFile} from 'fs/promises'
+import front_matter from 'front-matter'
+import Database from 'better-sqlite3'
+import ProgressBar from 'progress'
+import {marked} from 'marked'
+import * as html from'./lib/html.js'
 
-if (require.main === module) {
-    if (!(argv.o && argv._.length)) usage()
+if (import.meta.url.endsWith(process.argv[1])) {
+    let args
+    try {
+        args = util.parseArgs({allowPositionals: true, options: {
+            o: { type:'string' }, p: { type:'string' }, q: { type:'boolean' },
+        }})
+    } catch (err) {
+        console.error(err.message)
+        usage()
+    }
 
-    let db = db_open(argv.o)
+    if ( !(args.values.o && args.positionals.length)) usage()
+
+    let db = db_open(args.values.o, args.values.tokenizer)
     db.pragma('synchronous = OFF')
-    let bar = progress_bar(argv._.length, argv.q)
-    argv._.forEach( file => {
-	add(db, file, argv.p).catch( e => {
+    let bar = progress_bar(args.positionals.length, args.values.q)
+    args.positionals.forEach( file => {
+	add(db, file, args.values.p).catch( e => {
 	    console.error(`${file}: ${e.message}`)
 	    process.exitCode = 2
 	}).finally(bar.tick.bind(bar))
     })
 }
 
-function db_open(file) {
-    try { fs.unlinkSync(file) } catch(_) { /* ignore */ }
+function db_open(file, tokenizer = "") {
+    try { fs.unlinkSync(file) } catch { /* ignore */ }
 
+    tokenizer = `tokenize = '${tokenizer} unicode61 remove_diacritics 1'`
     let db = new Database(file)
-    db.prepare(`CREATE VIRTUAL TABLE fts USING fts5(file UNINDEXED, subject UNINDEXED, date UNINDEXED, body)`).run()
+    db.prepare(`CREATE VIRTUAL TABLE fts USING fts5(file UNINDEXED, subject UNINDEXED, date UNINDEXED, body, ${tokenizer})`).run()
     db.prepare(`CREATE TABLE metatags(file, type, name)`).run()
+    db.prepare(`CREATE INDEX metatags_file ON metatags(file)`).run()
     return db
 }
 
 function add(db, file, row_file_prefix_cutoff) {
-    return read(file, {encoding: 'utf8'})
+    return readFile(file, {encoding: 'utf8'})
 	.then(parse(file, row_file_prefix_cutoff))
 	.then(db_append(db))
 }
 
-function parse(file, prefix) {
+export function parse(file, prefix) {
     return text => {
 	let fm = front_matter(text)
 	fm.file = prefix ? file.slice(prefix.length) : file
 	return fm_normalise(fm)
     }
 }
-exports.parse = parse
 
 function fm_normalise(fm) {
     let a = {}
@@ -99,7 +110,9 @@ function epoch(file) {
     return (isNaN(d) ? new Date(0) : d).valueOf()/1000
 }
 function usage() {
-    console.error('Usage: nfts-create -o out.sqlite3 [-q] [-p row-file-prefix-cutoff] file1.md [...]')
+    console.error(`Usage: nfts-create -o file.sqlite3
+                   [-p row-file-prefix-cutoff] [--tokenizer NAME] [-q]
+                   file1.md [file2.md ...]`)
     process.exit(1)
 }
 function progress_bar(total, quiet) {

@@ -1,8 +1,7 @@
 #!/usr/bin/env -S mocha --ui=tdd
-'use strict';
 
-let assert = require('assert')
-let fts = require('../nfts-create')
+import {strict as assert} from 'assert'
+import * as fts from '../nfts-create.js'
 
 suite('frontmatter parsing', function() {
     test('blank', function() {
@@ -51,7 +50,7 @@ date: 1990-01-01
 `), {
 	    authors: ['anonymous'],
 	    body: 'Untitled ',
-	    date: 631152000, // 1990-01-01
+	    date: '631152000', // 1990-01-01
 	    file: '2000-01-01.md',
 	    subject: 'Untitled',
 	    tags: ['untagged']
