@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @media (min-width: 601px) {
+    body {
+      width: 600px;
+      margin: 8px auto;
+    }
+  }
+  #search {
+    border: 1px solid gray;
+    padding: 1em;
+  }
+</style>
+
+<p><button>Toggle Search</button></p>
+
+<div id="search">
+  <p><i>nfts dialog gets injected in the parent of this &lt;p&gt;</i></p>
+</div>
+
+<p>
+  Nullam eu ante vel est convallis dignissim.  Fusce suscipit, wisi nec
+  facilisis facilisis, est dui fermentum leo, quis tempor ligula erat
+  quis odio.  Nunc porta vulputate tellus.  Nunc rutrum turpis sed pede.
+  Sed bibendum.
+</p>
+
+<script src="../web.js"></script>
+<script id="nfts-conf" type="application/json">
+  {
+      "dialog_toggle_btn": "button",
+      "parent_container": "#search",
+      "server": "http://localhost:3000",
+      "debounce": 200
+  }
+</script>
+<script>
+  new NftsDialog(JSON.parse(document.querySelector("#nfts-conf").innerHTML),
+                 file => { // post
+                     console.log(file)
+                     let prefix = NftsDialog.date_fmt(file.slice(0,10))
+                     let basename = file.slice(10+1).replace(/\.[^.]+$/, '')
+                     return 'http://example.com/'+prefix+'/'+`${basename}.html`
+                 })
+</script>
