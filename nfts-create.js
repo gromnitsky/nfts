@@ -13,7 +13,8 @@ if (import.meta.url.endsWith(process.argv[1])) {
     let args
     try {
         args = util.parseArgs({allowPositionals: true, options: {
-            o: { type:'string' }, p: { type:'string' }, q: { type:'boolean' },
+            q: { type: 'boolean' }, tokenizer: { type: 'string' },
+            o: { type: 'string' }, p: { type: 'string' },
         }})
     } catch (err) {
         console.error(err.message)
@@ -33,12 +34,18 @@ if (import.meta.url.endsWith(process.argv[1])) {
     })
 }
 
-function db_open(file, tokenizer = "") {
+function db_open(file, tokenizer = "unicode61 remove_diacritics 1") {
     try { fs.unlinkSync(file) } catch { /* ignore */ }
-
-    tokenizer = `tokenize = '${tokenizer} unicode61 remove_diacritics 1'`
     let db = new Database(file)
-    db.prepare(`CREATE VIRTUAL TABLE fts USING fts5(file UNINDEXED, subject UNINDEXED, date UNINDEXED, body, ${tokenizer})`).run()
+    let escape = raw => db.prepare('SELECT quote(?)').pluck().get(raw)
+    db.prepare(`
+CREATE VIRTUAL TABLE fts USING fts5(
+  file UNINDEXED,
+  subject UNINDEXED,
+  date UNINDEXED,
+  body,
+  tokenize = ${escape(tokenizer)}
+)`).run()
     db.prepare(`CREATE TABLE metatags(file, type, name)`).run()
     db.prepare(`CREATE INDEX metatags_file ON metatags(file)`).run()
     return db
