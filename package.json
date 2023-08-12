@@ -8,6 +8,12 @@
         "type": "git",
         "url": "git://github.com/gromnitsky/nfts.git"
     },
+    "files": [
+        "lib/html.js",
+        "nfts-create.js",
+        "nfts-server.js",
+        "web.js"
+    ],
     "bin": {
         "nfts-create": "./nfts-create.js",
         "nfts-server": "./nfts-server.js"

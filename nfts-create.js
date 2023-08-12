@@ -9,7 +9,7 @@ import ProgressBar from 'progress'
 import {marked} from 'marked'
 import * as html from'./lib/html.js'
 
-if (import.meta.url.endsWith(process.argv[1])) {
+if (import.meta.url.endsWith(fs.realpathSync(process.argv[1]))) {
     let args
     try {
         args = util.parseArgs({allowPositionals: true, options: {
