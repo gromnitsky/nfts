@@ -47,7 +47,7 @@ CREATE VIRTUAL TABLE fts USING fts5(
   tokenize = ${escape(tokenizer)}
 )`).run()
     db.prepare(`CREATE TABLE metatags(file, type, name)`).run()
-    db.prepare(`CREATE INDEX metatags_file ON metatags(file)`).run()
+    db.prepare(`CREATE INDEX metatags_indices ON metatags(file,type)`).run()
     return db
 }
 

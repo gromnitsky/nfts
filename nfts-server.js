@@ -10,7 +10,7 @@ class Finder {
         return this.db.prepare(`
 SELECT name
 FROM metatags
-WHERE metatags.file = ? AND metatags.type = ?
+WHERE file = ? AND type = ?
 `).all(file, type).map( v => v.name)
     }
 
@@ -19,7 +19,7 @@ WHERE metatags.file = ? AND metatags.type = ?
             fts = this.db.prepare(`
 SELECT file,subject,date,snippet(fts,3,'<b>','</b>','...',64) AS snippet
 FROM fts
-WHERE fts.body MATCH ?
+WHERE body MATCH ?
 ORDER BY rank LIMIT 50
 `).all(query)
         } catch (err) {
