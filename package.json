@@ -15,8 +15,8 @@
         "web.js"
     ],
     "bin": {
-        "nfts-create": "./nfts-create.js",
-        "nfts-server": "./nfts-server.js"
+        "nfts-create": "nfts-create.js",
+        "nfts-server": "nfts-server.js"
     },
     "dependencies": {
         "better-sqlite3": "^9.4.1",
