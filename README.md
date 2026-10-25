@@ -7,11 +7,13 @@ An FTS server for static blogs; uses sqlite under the hood.
 ## Jekyll Integration
 
 To show how a real static blog can be augmented w/ FTS, we are going
-to use the repo for the RoR blog:
+to use the repo for the old RoR blog:
 
 ~~~
 $ git clone https://github.com/rails/weblog.git
 $ cd weblog
+# use Ruby 3.1.x to run the following 2 commands,
+# possibly removing Gemfile.lock first
 $ bundle install
 $ jekyll s --no-watch
 ~~~
