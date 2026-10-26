@@ -50,7 +50,7 @@ function err(res, msg, code = 400) {
 function server(opt) {
     return http.createServer(function (req, res) {
         res.setHeader('Access-Control-Allow-Origin', opt.a || '*')
-        if (req.method !== "GET") { return err(res, "not implemented") }
+        if (req.method !== "GET") { return err(res, "not implemented", 501) }
 
         let url; try {
             url = new URL(req.url, `http://${req.headers.host}`)

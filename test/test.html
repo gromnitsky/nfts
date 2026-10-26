@@ -8,6 +8,7 @@
       margin: 8px auto;
     }
   }
+  body { overflow-y: scroll; }
   #search {
     border: 1px solid gray;
     padding: 1em;
@@ -17,7 +18,7 @@
 <p><button>Toggle Search</button></p>
 
 <div id="search">
-  <p><i>nfts dialog gets injected in the parent of this &lt;p&gt;</i></p>
+  <p><i>nfts frame gets injected in the parent of this &lt;p&gt;</i></p>
 </div>
 
 <p>
@@ -27,21 +28,20 @@
   Sed bibendum.
 </p>
 
-<script src="../web.js"></script>
-<script id="nfts-conf" type="application/json">
-  {
-      "dialog_toggle_btn": "button",
-      "parent_container": "#search",
+<input>
+
+<script type="module">
+  import * as nfts from '../web.js'
+
+  let conf = {
+      "toggle_button": "button",
+      "container": "#search",
       "server": "http://localhost:3000",
       "debounce": 200
   }
-</script>
-<script>
-  new NftsDialog(JSON.parse(document.querySelector("#nfts-conf").innerHTML),
-                 file => { // post
-                     console.log(file)
-                     let prefix = NftsDialog.date_fmt(file.slice(0,10))
-                     let basename = file.slice(10+1).replace(/\.[^.]+$/, '')
-                     return 'http://example.com/'+prefix+'/'+`${basename}.html`
-                 })
+  new nfts.Frame(conf, e => {
+      let prefix = nfts.date_fmt(e.file.slice(0,10))
+      let basename = e.file.slice(10+1).replace(/\.[^.]+$/, '')
+      return 'http://example.com/'+prefix+'/'+`${basename}.html`
+  }, null, null)
 </script>
