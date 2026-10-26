@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-// test/fm.js ~/lib/writing/blog/en/_fts/src/2023/08/09/xfvwV6.md /home/alex/lib/writing/blog/en/_fts/src/
+// test/fm.js test/data/2010/11/23/wharton.md test/data/
 
 import fs from 'fs'
-import * as fts from '../nfts-create.js'
+import {md_parse} from '../nfts-add.js'
 
-let parse = fts.parse(...process.argv.slice(2))
-console.log(parse(fs.readFileSync(process.argv[2]).toString()))
+let file = process.argv[2]
+let text = fs.readFileSync(file).toString()
+console.log(md_parse(text, file, {s: process.argv[3]}))
