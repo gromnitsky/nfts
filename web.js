@@ -78,7 +78,7 @@ export class Frame {
                    '</tr></thead><tbody></tbody></table>']
         this.output.innerHTML = tbl.join("\n") + `<p>Total: ${r.length}</p>`
 
-        document.querySelector(`#${this.object_id} table`)
+        this.output.querySelector('table tbody')
             .append(...r.map( e => this.row(e)))
     }
 
@@ -107,16 +107,15 @@ export class Frame {
         td2.append(
             link(post_href(e), e.subject),
             p,
-            document.createTextNode('A: '),
+            'A: ',
             ...commaify(e.authors.map( v => link(author_href(v), v))),
             document.createElement('br'),
-            document.createTextNode('T: '),
+            'T: ',
             ...commaify(e.tags.map( v => link(tag_href(v), v))),
         )
         tr.appendChild(td2)
         return tr
     }
-
 }
 
 function fetch_json(url, opt) {
