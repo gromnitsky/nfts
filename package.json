@@ -10,12 +10,12 @@
     },
     "files": [
         "lib/html.js",
-        "nfts-create.js",
+        "nfts-add.js",
         "nfts-server.js",
         "web.js"
     ],
     "bin": {
-        "nfts-create": "nfts-create.js",
+        "nfts-add": "nfts-add.js",
         "nfts-server": "nfts-server.js"
     },
     "dependencies": {
