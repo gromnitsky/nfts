@@ -9,7 +9,6 @@
         "url": "git://github.com/gromnitsky/nfts.git"
     },
     "files": [
-        "lib/html.js",
         "nfts-add.js",
         "nfts-server.js",
         "web.js"
