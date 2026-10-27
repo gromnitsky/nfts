@@ -57,13 +57,18 @@ function epoch(file) {
 }
 
 function fm_normalise(fm) {
+    let maybe_date = v => {
+        if (Number.isInteger(v)) return v
+        let d = new Date(v); if (!isNaN(d)) return d.valueOf(d)/1000
+        return 0
+    }
     let a = {}
     for (let k of Object.keys(fm.attributes))
         a[k.toLowerCase()] = norm(fm.attributes[k])
     let r = {
         file: fm.file,
         subject: html2text(a.title || a.subject || 'Untitled'),
-        date: a.date || epoch(fm.file),
+        date: maybe_date(a.date) || epoch(fm.file),
         authors: array(a.author || a.authors, 'anonymous').map(html2text),
         tags: array(a.category || a.categories || a.tags, 'untagged')
             .map( v => html2text(v).toLowerCase())
