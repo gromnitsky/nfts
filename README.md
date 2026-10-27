@@ -2,7 +2,7 @@
 
 An FTS server for static blogs; uses SQLite under the hood.
 
-Use this if
+Use this if:
 
 * your blog gets generated from markdown files that contain [front
   matter](https://jekyllrb.com/docs/front-matter/);
@@ -19,7 +19,7 @@ Node 24+.
 
     $ nfts-add -o db.sqlite3 file1.md file2.md ...
 
-The front matter in .md files is paramount: w/o it `nfts-add` won't
+The front matter in .md files is paramount: w/o it, `nfts-add` won't
 find a subject for a blog post, its authors, &c.
 
 `nfts-add` appends data to the DB, so you can update it incrementally,
@@ -57,8 +57,8 @@ $ curl -s http://localhost:3000/?q=omg | jq
 
 ## Rendering search results in a browser
 
-The package includes `web.js` module that hooks to some button on a
-page, & draws an input field when a user clicks on the button.
+The package includes a `web.js` module that hooks into a button on a
+page & draws an input field when a user clicks on the button.
 
 ~~~
 import * as nfts from './web.js'
@@ -71,11 +71,10 @@ let conf = {
 }
 
 new nfts.Frame(conf)
-</script>
 ~~~
 
-`Frame` constructor supports additional 3 argument, each of which is a
-function for calculating an href for
+`Frame` constructor supports 3 additional arguments, each of which is a
+function for calculating an href for:
 
 1. blog posts
 
@@ -95,13 +94,13 @@ function for calculating an href for
 
     where `name` is a tag name.
 
-You can omit all 3, but then `web.js` won't render links to whan
+You can omit all 3, but then `web.js` won't render links to what
 `nfts-server` has returned.
 
 
 ## Jekyll integration example
 
-To show how a real static blog can be augmented w/ FTS, we'll use a
+To show how a real static blog can be augmented w/ FTS, we'll use the
 repo for the old RoR blog:
 
 ~~~
@@ -115,7 +114,7 @@ $ jekyll s --no-watch
 
 Open http://127.0.0.1:4000 to browse the blog.
 
-From another terminal:
+In another terminal:
 
 ~~~
 $ cd weblog
@@ -129,7 +128,7 @@ To test the server:
 
 This should return an array of snippets.
 
-Now
+Next:
 
 1. Edit `_includes/navigation.html` to add a link for invoking a
    search dialog:
@@ -164,8 +163,8 @@ Now
     ~~~
 
 The nfts integration is complete. Restart Jekyll, make sure it has
-completed the site regeneration, & refresh the blog page in the
-browser, then click "Search" & type "omg" (you don't need to press
+finished regenerating the site, & refresh the blog page in the
+browser. Then click "Search" & type "omg" (you don't need to press
 Enter).
 
 ## License
