@@ -11,12 +11,17 @@ export class Frame {
         btn.onclick = evt => { this.toggle(); evt.preventDefault() }
 
         this.conf = conf
-        Object.assign(this, {fn_post_href, fn_author_href, fn_tag_href})
+        this.post_href = fn_post_href || (v => v)
+        this.author_href = fn_author_href || (v => v)
+        this.tag_href = fn_tag_href || (v => v)
     }
 
     static #counter = 0
 
-    is_hidden() { return this.node.classList.contains(`${this.object_id}--hidden`) }
+    is_hidden() {
+        return this.node.classList.contains(`${this.object_id}--hidden`)
+    }
+
     focus() { if (!this.is_hidden()) this.input.focus() }
 
     toggle() {
@@ -34,46 +39,53 @@ export class Frame {
         this.node.classList.add(CN)
 
         this.parent.prepend(this.node) // FIXME
-        this.node.innerHTML= '<input type="search" placeholder="Search..." spellcheck="false"><div></div>'
-        this.input = this.node.querySelector('input')
-        this.output = this.node.querySelector('div')
-
-        this.input.oninput = debounce(this.search, this.conf.debounce || 500).bind(this)
-
-        let style = document.createElement('style')
-        style.innerHTML = `
-.${this.object_id}--hidden { display: none; }
-#${this.object_id} > div { margin-top: 1em; }
-#${this.object_id} table td { word-wrap: break-word; }
-#${this.object_id} table td p { margin: 0; }
+        this.node.innerHTML= `
+<input type="search" placeholder="Search..." spellcheck="false">
+<div></div>
+<style>
+  .${this.object_id}--hidden { display: none; }
+  #${this.object_id} > div { margin-top: 1em; }
+  #${this.object_id} table { table-layout: fixed; width: 100%; }
+  #${this.object_id} table th:first-child { width: 7em; }
+  #${this.object_id} table td { word-wrap: break-word; }
+  #${this.object_id} table td p { margin: 0; }
+</style>
 `
-        document.body.appendChild(style)
+        this.input = this.node.querySelector('input')
+        this.input.oninput = debounce(this.search, this.conf.debounce || 500).bind(this)
+        this.output = this.node.querySelector('div')
     }
 
     search() {
         let q = this.input.value.trim()
         if (q === this.prev_query || q.length < 3) return
+
+        this.abort_controller?.abort()
+        this.abort_controller = new AbortController()
+
         this.prev_query = q
         this.output.innerText = 'Fetching results...'
-        this.send(q)
+        this.send(q, this.abort_controller.signal)
             .then(this.draw_results.bind(this))
             .catch(this.search_error.bind(this))
     }
 
-    send(query) {
+    send(query, signal) {
         let url = `${this.conf.server}/?q=${encodeURIComponent(query)}`
-        return fetch_json(url)
+        return fetch_json(url, { signal })
     }
 
     search_error(e) {
+        if (e?.name === 'AbortError') return
+        this.prev_query = null
         this.output.innerText = e?.res?.status === 400 ? 'Invalid query' : e.message
     }
 
     draw_results(r) {
         if (!r.length) { this.output.innerText = 'No matches'; return }
-        let tbl = ['<table style="table-layout: fixed; width: 100%">',
+        let tbl = ['<table>',
                    '<thead><tr>',
-                   '<th style="width: 7em">Air Date</th>',
+                   '<th>Air Date</th>',
                    '<th>Snippet</th>',
                    '</tr></thead><tbody></tbody></table>']
         this.output.innerHTML = tbl.join("\n") + `<p>Total: ${r.length}</p>`
@@ -83,17 +95,6 @@ export class Frame {
     }
 
     row(e) {
-        let link = (href, text) => {
-            if (href === text) return document.createTextNode(text)
-            let a = document.createElement('a')
-            a.href = href
-            a.textContent = text
-            return a
-        }
-        let post_href = this.fn_post_href || (v => v)
-        let author_href = this.fn_author_href || (v => v)
-        let tag_href = this.fn_tag_href || (v => v)
-
         let tr = document.createElement('tr')
 
         let td1 = document.createElement('td')
@@ -105,26 +106,34 @@ export class Frame {
         let p = document.createElement('p')
         render_snippet_into(p, e.snippet)
         td2.append(
-            link(post_href(e), e.subject),
+            link(this.post_href(e), e.subject),
             p,
             'A: ',
-            ...commaify(e.authors.map( v => link(author_href(v), v))),
+            ...commaify(e.authors.map( v => link(this.author_href(v), v))),
             document.createElement('br'),
             'T: ',
-            ...commaify(e.tags.map( v => link(tag_href(v), v))),
+            ...commaify(e.tags.map( v => link(this.tag_href(v), v))),
         )
         tr.appendChild(td2)
         return tr
     }
 }
 
+function link(href, text) {
+    if (href === text) return document.createTextNode(text)
+    let a = document.createElement('a')
+    a.href = href
+    a.textContent = text
+    return a
+}
+
 function fetch_json(url, opt) {
-    let err = r => {
+    let validate = r => {
         if (r.ok) return r
         let e = new Error(r.statusText); e.res = r
         throw e
     }
-    return fetch(url, opt).then(err).then( r => r.json())
+    return fetch(url, opt).then(validate).then( r => r.json())
 }
 
 function commaify(elements) {
@@ -143,7 +152,7 @@ function render_snippet_into(container, snippet) {
     for (let part of snippet.split(/(\u0002|\u0003)/)) {
         if (part === '') continue
         if (part === '\u0002') {
-            bold = container.appendChild(document.createElement('b'))
+            bold = container.appendChild(document.createElement('mark'))
             continue
         }
         if (part === '\u0003') {
