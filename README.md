@@ -30,8 +30,9 @@ but usually it's easier to remove the DB file before running
 
     $ nfts-server db.sqlite3
 
-It'll print host+port values. The server only reads `q` search
-parameter, & returns an array of JSON objects:
+It'll print host+port values. The server has 0 dependencies, doesn't
+store any logs, only reads `q` search parameter, & returns an array of
+JSON objects:
 
 ~~~
 $ curl -s http://localhost:3000/?q=omg | jq
